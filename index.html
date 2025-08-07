@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Filter & Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #454275 0%, #cc4223 100%);
+            color: white;
+            padding: 20px 30px;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .card-content {
+            padding: 30px;
+        }
+
+        /* Upload Section */
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #454275;
+            background: rgba(69, 66, 117, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: #cc4223;
+            background: rgba(204, 66, 35, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #454275;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #454275;
+            font-weight: 600;
+        }
+
+        .upload-subtext {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #454275 0%, #cc4223 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(69, 66, 117, 0.3);
+        }
+
+        /* Filter Section */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #454275;
+        }
+
+        .filter-input {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #454275;
+            box-shadow: 0 0 0 3px rgba(69, 66, 117, 0.1);
+        }
+
+        .filter-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .apply-filters-btn {
+            background: linear-gradient(135deg, #cc4223 0%, #454275 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .apply-filters-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(204, 66, 35, 0.3);
+        }
+
+        .reset-filters-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .reset-filters-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .filter-buttons button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Results Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #454275 0%, #cc4223 100%);
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+
+        .results-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .results-table tbody tr:hover {
+            background-color: rgba(69, 66, 117, 0.1);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #454275;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card-content {
+                padding: 20px;
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Amazon POD Data Filter</h1>
+            <p>Copyright ©2025 Developed by Bob </p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                Upload your Clean_Data.xlsx file
+            </div>
+            <div class="card-content">
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-text">Select your Excel file to filter and display the data</div>
+                    <div class="upload-subtext">Drag and drop or click to choose your .xlsx file</div>
+                    <button class="upload-btn" type="button">Choose Excel File</button>
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls" />
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <div>Processing your Excel file...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="card" id="filterCard" style="display: none;">
+            <div class="card-header">
+                🔍 Filter Options
+            </div>
+            <div class="card-content">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Price (>= entered value)</label>
+                        <input type="number" id="priceFilter" class="filter-input" placeholder="Enter value or leave empty" step="0.01">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">BSR (<= entered value)</label>
+                        <input type="text" id="bsrFilter" class="filter-input" placeholder="Enter value or N/A to ignore">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Estimated Sales (>= entered value)</label>
+                        <input type="text" id="estimatedSalesFilter" class="filter-input" placeholder="Enter value or N/A to ignore">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Stars (<= entered value)</label>
+                        <input type="text" id="starsFilter" class="filter-input" placeholder="Enter value or N/A to ignore" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Reviews (<= entered value)</label>
+                        <input type="text" id="reviewsFilter" class="filter-input" placeholder="Enter value or N/A to ignore">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Added Date (Month/Year)</label>
+                        <input type="month" id="addedFilter" class="filter-input" placeholder="Select month and year">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Sold (>= entered value)</label>
+                        <input type="number" id="soldFilter" class="filter-input" placeholder="Enter value or leave empty">
+                    </div>
+                </div>
+                <div class="filter-buttons">
+                    <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
+                    <button class="reset-filters-btn" onclick="resetFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card" id="resultsCard" style="display: none;">
+            <div class="card-header">
+                Filtered Results
+            </div>
+            <div class="card-content">
+                <div class="stats" id="stats"></div>
+                <div class="table-container">
+                    <table class="results-table" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>BSR</th>
+                                <th>Estimated Sales</th>
+                                <th>Stars</th>
+                                <th>Reviews</th>
+                                <th>ASIN</th>
+                                <th>Added</th>
+                                <th>Sold</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let excelData = [];
+        let filteredData = [];
+
+        // File input handling with real-time filtering setup
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+        
+        // Add real-time filtering event listeners
+        const filterInputs = ['priceFilter', 'bsrFilter', 'estimatedSalesFilter', 'starsFilter', 'reviewsFilter', 'addedFilter', 'soldFilter'];
+        filterInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', applyFilters);
+            document.getElementById(id).addEventListener('change', applyFilters);
+        });
+
+        // Drag and drop handling
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile({ target: { files: files } });
+            }
+        });
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert to JSON
+                    excelData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    // Clean and normalize the data
+                    excelData = excelData.map(row => {
+                        return {
+                            Price: parseFloat(row.Price) || 0,
+                            BSR: parseInt(row.BSR) || 0,
+                            Estimated_Sales: parseInt(row.Estimated_Sales) || 0,
+                            Stars: parseFloat(row.Stars) || 0,
+                            Reviews: parseInt(row.Reviews) || 0,
+                            ASIN: row.ASIN || '',
+                            Added: row.Added || '',
+                            Sold: parseInt(row.Sold) || 0
+                        };
+                    });
+
+                    filteredData = [...excelData];
+                    
+                    // Initial sort by BSR ascending
+                    filteredData.sort((a, b) => a.BSR - b.BSR);
+                    
+                    loading.style.display = 'none';
+                    document.getElementById('filterCard').style.display = 'block';
+                    document.getElementById('resultsCard').style.display = 'block';
+                    
+                    displayResults();
+                    updateStats();
+                    
+                } catch (error) {
+                    loading.style.display = 'none';
+                    alert('Error reading Excel file. Please make sure it\'s a valid .xlsx file.');
+                    console.error('Error:', error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function applyFilters() {
+            if (excelData.length === 0) return;
+
+            // Get filter values
+            const priceValue = document.getElementById('priceFilter').value.trim();
+            const bsrValue = document.getElementById('bsrFilter').value.trim();
+            const salesValue = document.getElementById('estimatedSalesFilter').value.trim();
+            const starsValue = document.getElementById('starsFilter').value.trim();
+            const reviewsValue = document.getElementById('reviewsFilter').value.trim();
+            const addedValue = document.getElementById('addedFilter').value.trim();
+            const soldValue = document.getElementById('soldFilter').value.trim();
+
+            // Apply SQL-like filtering logic
+            filteredData = excelData.filter(row => {
+                // Price >= entered value OR accept all if value is empty
+                if (priceValue !== '' && !isNaN(priceValue)) {
+                    if (row.Price < parseFloat(priceValue)) return false;
+                }
+
+                // BSR <= entered value OR accept all if value is "N/A"
+                if (bsrValue !== '' && bsrValue.toLowerCase() !== 'n/a') {
+                    if (!isNaN(bsrValue)) {
+                        if (row.BSR > parseInt(bsrValue)) return false;
+                    }
+                }
+
+                // Estimated_Sales >= entered value OR accept all if value is "N/A"
+                if (salesValue !== '' && salesValue.toLowerCase() !== 'n/a') {
+                    if (!isNaN(salesValue)) {
+                        if (row.Estimated_Sales < parseInt(salesValue)) return false;
+                    }
+                }
+
+                // Stars <= entered value OR accept all if value is "N/A"
+                if (starsValue !== '' && starsValue.toLowerCase() !== 'n/a') {
+                    if (!isNaN(starsValue)) {
+                        if (row.Stars > parseFloat(starsValue)) return false;
+                    }
+                }
+
+                // Reviews <= entered value OR accept all if value is "N/A"
+                if (reviewsValue !== '' && reviewsValue.toLowerCase() !== 'n/a') {
+                    if (!isNaN(reviewsValue)) {
+                        if (row.Reviews > parseInt(reviewsValue)) return false;
+                    }
+                }
+
+                // Added date filter - match month and year only
+                if (addedValue !== '') {
+                    const filterDate = new Date(addedValue);
+                    const filterMonth = filterDate.getMonth();
+                    const filterYear = filterDate.getFullYear();
+                    
+                    // Parse row date (format: MM/DD/YYYY or DD/MM/YYYY)
+                    const rowDateStr = row.Added.toString();
+                    let rowDate;
+                    
+                    // Try to parse the date (handle MM/DD/YYYY format)
+                    if (rowDateStr.includes('/')) {
+                        const dateParts = rowDateStr.split('/');
+                        if (dateParts.length === 3) {
+                            // Assuming MM/DD/YYYY format based on your example 08/06/2024
+                            rowDate = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
+                        }
+                    } else {
+                        rowDate = new Date(row.Added);
+                    }
+                    
+                    if (rowDate && !isNaN(rowDate.getTime())) {
+                        const rowMonth = rowDate.getMonth();
+                        const rowYear = rowDate.getFullYear();
+                        
+                        // Filter: show only items from the selected month/year
+                        if (rowMonth !== filterMonth || rowYear !== filterYear) return false;
+                    }
+                }
+
+                // Sold >= entered value OR accept all if value is empty
+                if (soldValue !== '' && !isNaN(soldValue)) {
+                    if (row.Sold < parseInt(soldValue)) return false;
+                }
+
+                return true;
+            });
+
+            // Sort by BSR ascending
+            filteredData.sort((a, b) => a.BSR - b.BSR);
+
+            displayResults();
+            updateStats();
+        }
+
+        function displayResults() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No data matches your filters</td></tr>';
+                return;
+            }
+
+            filteredData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>$${row.Price.toFixed(2)}</td>
+                    <td>${row.BSR.toLocaleString()}</td>
+                    <td>${row.Estimated_Sales}</td>
+                    <td>${row.Stars.toFixed(1)} ⭐</td>
+                    <td>${row.Reviews.toLocaleString()}</td>
+                    <td>${row.ASIN}</td>
+                    <td>${formatDate(row.Added)}</td>
+                    <td>${row.Sold}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateStats() {
+            const statsContainer = document.getElementById('stats');
+            
+            const totalItems = filteredData.length;
+            const avgPrice = filteredData.length > 0 ? 
+                (filteredData.reduce((sum, item) => sum + item.Price, 0) / filteredData.length).toFixed(2) : 0;
+            const totalSold = filteredData.reduce((sum, item) => sum + item.Sold, 0);
+            const avgStars = filteredData.length > 0 ? 
+                (filteredData.reduce((sum, item) => sum + item.Stars, 0) / filteredData.length).toFixed(1) : 0;
+
+            statsContainer.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${totalItems}</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$${avgPrice}</div>
+                    <div class="stat-label">Avg Price</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${totalSold}</div>
+                    <div class="stat-label">Total Sold</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${avgStars} ⭐</div>
+                    <div class="stat-label">Avg Rating</div>
+                </div>
+            `;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString();
+            } catch {
+                return dateString;
+            }
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('.filter-input').forEach(input => input.value = '');
+            if (excelData.length > 0) {
+                filteredData = [...excelData];
+                // Sort by BSR ascending
+                filteredData.sort((a, b) => a.BSR - b.BSR);
+                displayResults();
+                updateStats();
+            }
+        }
+
+        // Clear filters functionality
+        function clearFilters() {
+            resetFilters();
+        }
+    </script>
+</body>
+</html>
