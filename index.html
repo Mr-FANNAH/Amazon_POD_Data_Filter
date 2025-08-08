@@ -327,14 +327,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Amazon POD Data Filter</h1>
-            <p>Copyright ©2025 Developed by Bob </p>
+            <h1>Excel Data Filter & Viewer</h1>
+            <p>Copyright ©2025 Developed by Bob</p>
         </div>
 
         <!-- Upload Section -->
         <div class="card">
             <div class="card-header">
-                Upload your Clean_Data.xlsx file
+               Upload your Clean_Data.xlsx file
             </div>
             <div class="card-content">
                 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
@@ -378,7 +378,7 @@
                         <input type="text" id="reviewsFilter" class="filter-input" placeholder="Enter value or N/A to ignore">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">Added Date (Month/Year)</label>
+                        <label class="filter-label">Added Date (<= Month/Year)</label>
                         <input type="month" id="addedFilter" class="filter-input" placeholder="Select month and year">
                     </div>
                     <div class="filter-group">
@@ -396,7 +396,7 @@
         <!-- Results Section -->
         <div class="card" id="resultsCard" style="display: none;">
             <div class="card-header">
-                Filtered Results
+               Filtered Results
             </div>
             <div class="card-content">
                 <div class="stats" id="stats"></div>
@@ -557,13 +557,13 @@
                     }
                 }
 
-                // Added date filter - match month and year only
+                // Added date filter - show all dates from selected month/year to today
                 if (addedValue !== '') {
                     const filterDate = new Date(addedValue);
                     const filterMonth = filterDate.getMonth();
                     const filterYear = filterDate.getFullYear();
                     
-                    // Parse row date (format: MM/DD/YYYY or DD/MM/YYYY)
+                    // Parse row date (format: MM/DD/YYYY)
                     const rowDateStr = row.Added.toString();
                     let rowDate;
                     
@@ -582,8 +582,12 @@
                         const rowMonth = rowDate.getMonth();
                         const rowYear = rowDate.getFullYear();
                         
-                        // Filter: show only items from the selected month/year
-                        if (rowMonth !== filterMonth || rowYear !== filterYear) return false;
+                        // Create comparison dates (first day of selected month and row month)
+                        const selectedMonthStart = new Date(filterYear, filterMonth, 1);
+                        const rowMonthStart = new Date(rowYear, rowMonth, 1);
+                        
+                        // Filter: show items from selected month/year onwards (>=)
+                        if (rowMonthStart < selectedMonthStart) return false;
                     }
                 }
 
