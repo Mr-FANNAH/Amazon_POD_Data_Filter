@@ -623,13 +623,13 @@
                     <td>${row.Estimated_Sales}</td>
                     <td>${row.Stars.toFixed(1)} ⭐</td>
                     <td>${row.Reviews.toLocaleString()}</td>
-                    <td>${row.ASIN}</td>
+                    <td class="asin-link" style="color:blue; text-decoration:underline; cursor:pointer;">${row.ASIN}</td>
                     <td>${formatDate(row.Added)}</td>
                     <td>${row.Sold}</td>
                 `;
-                 // Rendre toute la ligne cliquable
-    tr.style.cursor = "pointer";
-    tr.addEventListener("click", () => {
+                  // Rendre seulement la cellule ASIN cliquable
+    const asinCell = tr.querySelector(".asin-link");
+    asinCell.addEventListener("click", () => {
         window.open(`https://www.amazon.com/dp/${row.ASIN}`, "_blank");
     });
                 tbody.appendChild(tr);
@@ -694,6 +694,7 @@
     </script>
 </body>
 </html>
+
 
 
 
