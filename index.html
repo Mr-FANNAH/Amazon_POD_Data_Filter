@@ -221,7 +221,7 @@
         .results-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
 
         .results-table th {
@@ -627,6 +627,11 @@
                     <td>${formatDate(row.Added)}</td>
                     <td>${row.Sold}</td>
                 `;
+                 // Rendre toute la ligne cliquable
+    tr.style.cursor = "pointer";
+    tr.addEventListener("click", () => {
+        window.open(`https://www.amazon.com/dp/${row.ASIN}`, "_blank");
+    });
                 tbody.appendChild(tr);
             });
         }
@@ -689,6 +694,7 @@
     </script>
 </body>
 </html>
+
 
 
 
