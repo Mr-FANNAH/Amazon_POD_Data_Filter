@@ -66,14 +66,14 @@
         }
 
         .card-content {
-            padding: 30px;
+            padding: 15px;
         }
 
         /* Upload Section */
         .upload-area {
             border: 3px dashed #ddd;
             border-radius: 12px;
-            padding: 40px;
+            padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
@@ -315,7 +315,7 @@
             }
             
             .card-content {
-                padding: 20px;
+                padding: 15px;
             }
             
             .filter-grid {
@@ -334,7 +334,7 @@
         <!-- Upload Section -->
         <div class="card">
             <div class="card-header">
-               Upload your Clean_Data.xlsx file
+                Upload your Clean_Data.xlsx file
             </div>
             <div class="card-content">
                 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
@@ -358,31 +358,31 @@
             <div class="card-content">
                 <div class="filter-grid">
                     <div class="filter-group">
-                        <label class="filter-label">Price (>= entered value)</label>
+                        <label class="filter-label">Price</label>
                         <input type="number" id="priceFilter" class="filter-input" placeholder="Enter value or leave empty" step="0.01">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">BSR (<= entered value)</label>
+                        <label class="filter-label">BSR</label>
                         <input type="text" id="bsrFilter" class="filter-input" placeholder="Enter value or N/A to ignore">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">Estimated Sales (>= entered value)</label>
+                        <label class="filter-label">Estimated Sales</label>
                         <input type="text" id="estimatedSalesFilter" class="filter-input" placeholder="Enter value or N/A to ignore">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">Stars (<= entered value)</label>
+                        <label class="filter-label">Stars</label>
                         <input type="text" id="starsFilter" class="filter-input" placeholder="Enter value or N/A to ignore" step="0.1">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">Reviews (<= entered value)</label>
+                        <label class="filter-label">Reviews</label>
                         <input type="text" id="reviewsFilter" class="filter-input" placeholder="Enter value or N/A to ignore">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">Added Date (<= Month/Year)</label>
+                        <label class="filter-label">Added Date</label>
                         <input type="month" id="addedFilter" class="filter-input" placeholder="Select month and year">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">Sold (>= entered value)</label>
+                        <label class="filter-label">Sold</label>
                         <input type="number" id="soldFilter" class="filter-input" placeholder="Enter value or leave empty">
                     </div>
                 </div>
@@ -396,7 +396,7 @@
         <!-- Results Section -->
         <div class="card" id="resultsCard" style="display: none;">
             <div class="card-header">
-               Filtered Results
+                Filtered Results
             </div>
             <div class="card-content">
                 <div class="stats" id="stats"></div>
@@ -479,7 +479,7 @@
                     excelData = excelData.map(row => {
                         return {
                             Price: parseFloat(row.Price) || 0,
-                            BSR: parseInt(row.BSR) || 0,
+                            BSR: parseInt(String(row.BSR).replace(/\s/g, '')) || 0, // Remove all spaces from BSR
                             Estimated_Sales: parseInt(row.Estimated_Sales) || 0,
                             Stars: parseFloat(row.Stars) || 0,
                             Reviews: parseInt(row.Reviews) || 0,
