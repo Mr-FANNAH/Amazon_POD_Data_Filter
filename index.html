@@ -381,10 +381,7 @@
                         <label class="filter-label">Added Date</label>
                         <input type="month" id="addedFilter" class="filter-input" placeholder="Select month and year">
                     </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Sold</label>
-                        <input type="number" id="soldFilter" class="filter-input" placeholder="Enter value or leave empty">
-                    </div>
+                
                 </div>
                 <div class="filter-buttons">
                     <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
@@ -411,7 +408,6 @@
                                 <th>Reviews</th>
                                 <th>ASIN</th>
                                 <th>Added</th>
-                                <th>Sold</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -484,9 +480,7 @@
                             Stars: parseFloat(row.Stars) || 0,
                             Reviews: parseInt(row.Reviews) || 0,
                             ASIN: row.ASIN || '',
-                            Added: row.Added || '',
-                            Sold: parseInt(row.Sold) || 0
-                        };
+                            Added: row.Added || ''                        };
                     });
 
                     filteredData = [...excelData];
@@ -520,7 +514,6 @@
             const starsValue = document.getElementById('starsFilter').value.trim();
             const reviewsValue = document.getElementById('reviewsFilter').value.trim();
             const addedValue = document.getElementById('addedFilter').value.trim();
-            const soldValue = document.getElementById('soldFilter').value.trim();
 
             // Apply SQL-like filtering logic
             filteredData = excelData.filter(row => {
@@ -591,12 +584,7 @@
                     }
                 }
 
-                // Sold >= entered value OR accept all if value is empty
-                if (soldValue !== '' && !isNaN(soldValue)) {
-                    if (row.Sold < parseInt(soldValue)) return false;
-                }
-
-                return true;
+          
             });
 
             // Sort by BSR ascending
@@ -625,7 +613,6 @@
                     <td>${row.Reviews.toLocaleString()}</td>
                     <td class="asin-link" style="color:blue; text-decoration:underline; cursor:pointer;">${row.ASIN}</td>
                     <td>${formatDate(row.Added)}</td>
-                    <td>${row.Sold}</td>
                 `;
                   // Rendre seulement la cellule ASIN cliquable
     const asinCell = tr.querySelector(".asin-link");
@@ -642,7 +629,6 @@
             const totalItems = filteredData.length;
             const avgPrice = filteredData.length > 0 ? 
                 (filteredData.reduce((sum, item) => sum + item.Price, 0) / filteredData.length).toFixed(2) : 0;
-            const totalSold = filteredData.reduce((sum, item) => sum + item.Sold, 0);
             const avgStars = filteredData.length > 0 ? 
                 (filteredData.reduce((sum, item) => sum + item.Stars, 0) / filteredData.length).toFixed(1) : 0;
 
@@ -655,10 +641,7 @@
                     <div class="stat-value">$${avgPrice}</div>
                     <div class="stat-label">Avg Price</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value">${totalSold}</div>
-                    <div class="stat-label">Total Sold</div>
-                </div>
+                
                 <div class="stat-item">
                     <div class="stat-value">${avgStars} ⭐</div>
                     <div class="stat-label">Avg Rating</div>
@@ -694,6 +677,7 @@
     </script>
 </body>
 </html>
+
 
 
 
